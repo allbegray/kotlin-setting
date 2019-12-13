@@ -1,0 +1,175 @@
+buildscript {
+    def env = { String name -> System.getProperty(name, System.getenv(name)) }
+
+    ext.versions = [
+            'kotlinx_coroutines': '1.3.2',
+            'arrow_kt'          : '0.10.3'
+    ]
+
+    ext.database = [
+            'library' : 'org.postgresql:postgresql:42.2.9',
+            'driver'  : 'org.postgresql.Driver',
+            'url'     : env("JDBC_URL") ?: 'jdbc:postgresql://localhost:5432/kotlin-setting',
+            'username': env("JDBC_USERNAME") ?: 'postgres',
+            'password': env("JDBC_PASSWORD") ?: '1234'
+    ]
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.61'
+    id "org.jetbrains.kotlin.kapt" version "1.3.61"
+
+    id "org.jmailen.kotlinter" version "2.2.0"
+
+    id "org.jetbrains.kotlin.plugin.spring" version "1.3.61"
+    id "org.springframework.boot" version "2.2.2.RELEASE"
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
+
+    id "org.flywaydb.flyway" version "6.1.1"
+    id 'nu.studer.jooq' version '3.0.3'
+}
+
+allprojects {
+    group 'org.example'
+    version '1.0-SNAPSHOT'
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+}
+
+subprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    tasks {
+        compileKotlin {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+        compileTestKotlin {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+        test {
+            useJUnitPlatform()
+        }
+    }
+
+    apply plugin: "org.jmailen.kotlinter"
+    kotlinter {
+        disabledRules = ["no-wildcard-imports", "filename"]
+    }
+
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.kotlinx_coroutines"
+        compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$versions.kotlinx_coroutines"
+        compile "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$versions.kotlinx_coroutines"
+
+        compile "ch.qos.logback:logback-classic:1.2.3"
+        compile "org.slf4j:slf4j-api:1.7.29"
+        compile "io.github.microutils:kotlin-logging:1.7.7"
+
+        testCompile "org.junit.jupiter:junit-jupiter:5.5.2"
+    }
+}
+
+project(':meta') {
+    apply plugin: "org.flywaydb.flyway"
+    flyway {
+        url = database.url
+        user = database.username
+        password = database.password
+    }
+
+    apply plugin: 'nu.studer.jooq'
+    jooq {
+        Meta(sourceSets.main) {
+            jdbc {
+                driver = database.driver
+                url = database.url
+                user = database.username
+                password = database.password
+            }
+            generator {
+                name = 'org.jooq.codegen.DefaultGenerator'
+                strategy {
+                    name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                }
+                database {
+                    name = 'org.jooq.meta.postgres.PostgresDatabase'
+                    inputSchema = 'public'
+                }
+                generate {
+                    relations = true
+                    deprecated = false
+                    records = true
+                    pojos = true
+//                    immutablePojos = true
+                    fluentSetters = true
+                    javaTimeTypes = true
+                }
+                target {
+                    packageName = 'hong.meta.jooq'
+                }
+            }
+        }
+    }
+
+    dependencies {
+        implementation "org.jooq:jooq"
+        implementation database.library
+        jooqRuntime database.library
+    }
+}
+
+project(':core') {
+    apply plugin: "org.jetbrains.kotlin.kapt"
+
+    dependencies {
+        implementation "io.arrow-kt:arrow-fx:$versions.arrow_kt"
+        implementation "io.arrow-kt:arrow-optics:$versions.arrow_kt"
+        implementation "io.arrow-kt:arrow-syntax:$versions.arrow_kt"
+        kapt "io.arrow-kt:arrow-meta:$versions.arrow_kt"
+    }
+}
+
+project(':web') {
+    apply plugin: "org.springframework.boot"
+    apply plugin: "io.spring.dependency-management"
+    apply plugin: "org.jetbrains.kotlin.plugin.spring"
+
+    configurations {
+        developmentOnly
+        runtimeClasspath {
+            extendsFrom developmentOnly
+        }
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        compile(project(":meta"))
+        compile(project(":core"))
+
+        implementation 'org.springframework.boot:spring-boot-starter-freemarker'
+        implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.codehaus.groovy:groovy'
+        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+
+        implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1"
+    }
+}
+

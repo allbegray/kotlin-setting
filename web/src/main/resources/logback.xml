@@ -1,0 +1,18 @@
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%-30(%d{YYYY-MM-dd HH:mm:ss.SSS} | [%thread]) %-5level %logger{5} \(%file:%line\) - %msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="org.hibernate.validator" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+
+    <root level="debug">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>
