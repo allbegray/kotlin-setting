@@ -53,6 +53,7 @@ class RetrofitServiceRegistrar : ImportBeanDefinitionRegistrar {
 
 class RetrofitServiceFactoryBean(private val beanClass: Class<Any>) : AbstractFactoryBean<Any>() {
 
+    @Suppress("SpringJavaAutowiredMembersInspection")
     @Autowired
     lateinit var applicationContext: AbstractApplicationContext
 
