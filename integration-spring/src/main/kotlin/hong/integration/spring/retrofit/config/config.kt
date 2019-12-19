@@ -2,25 +2,32 @@ package hong.integration.spring.retrofit.config
 
 import hong.integration.spring.retrofit.annotation.RetrofitService
 import hong.integration.spring.retrofit.autoconfigure.RetrofitServiceScan
+import org.springframework.beans.factory.BeanFactory
+import org.springframework.beans.factory.BeanFactoryAware
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.config.AbstractFactoryBean
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.BeanDefinition
-import org.springframework.beans.factory.support.BeanDefinitionBuilder
+import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
+import org.springframework.beans.factory.support.RootBeanDefinition
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar
-import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.core.annotation.AnnotationAttributes
 import org.springframework.core.type.AnnotationMetadata
 import org.springframework.core.type.filter.AnnotationTypeFilter
 import org.springframework.util.ClassUtils
 import retrofit2.Retrofit
-import kotlin.reflect.full.findAnnotation
 
 class RetrofitServiceRegistrar : ImportBeanDefinitionRegistrar {
 
     override fun registerBeanDefinitions(importingClassMetadata: AnnotationMetadata, registry: BeanDefinitionRegistry) {
+        if (!registry.containsBeanDefinition(RetrofitServiceBeanPostProcessorAdapter.BEAN_NAME)) {
+            registry.registerBeanDefinition(
+                RetrofitServiceBeanPostProcessorAdapter.BEAN_NAME,
+                RootBeanDefinition(RetrofitServiceBeanPostProcessorAdapter::class.java)
+            )
+        }
+
         val packages = getPackagesToScan(importingClassMetadata)
         val provider = RetrofitServiceComponentProvider()
         packages
@@ -45,25 +52,29 @@ class RetrofitServiceRegistrar : ImportBeanDefinitionRegistrar {
     }
 
     private fun register(beanDefinition: BeanDefinition, registry: BeanDefinitionRegistry) {
-        val builder = BeanDefinitionBuilder.rootBeanDefinition(RetrofitServiceFactoryBean::class.java)
-        builder.addConstructorArgValue(beanDefinition.beanClassName)
-        registry.registerBeanDefinition(beanDefinition.beanClassName!!, builder.beanDefinition)
-    }
-}
-
-class RetrofitServiceFactoryBean(private val beanClass: Class<Any>) : AbstractFactoryBean<Any>() {
-
-    @Suppress("SpringJavaAutowiredMembersInspection")
-    @Autowired
-    lateinit var applicationContext: AbstractApplicationContext
-
-    override fun createInstance(): Any {
-        val retrofitService = beanClass.kotlin.findAnnotation<RetrofitService>()!!
-        val retrofit = applicationContext.getBean(retrofitService.value, Retrofit::class.java)
-        return retrofit.create(beanClass)
+        val beanName = generateBeanName(beanDefinition)
+        registry.registerBeanDefinition(beanName, beanDefinition)
     }
 
-    override fun getObjectType(): Class<*>? = Any::class.javaObjectType
+    private fun generateBeanName(beanDefinition: BeanDefinition): String {
+        try {
+            val beanClass = Class.forName(beanDefinition.beanClassName)
+
+            val retrofitService = beanClass.getAnnotation(RetrofitService::class.java)
+            if (retrofitService != null && retrofitService.name.isNotBlank()) {
+                return retrofitService.name
+            }
+
+            val qualifier = beanClass.getAnnotation(Qualifier::class.java)
+            if (qualifier != null && qualifier.value.isNotBlank()) {
+                return qualifier.value
+            }
+
+            return beanClass.name
+        } catch (e: ClassNotFoundException) {
+            throw RuntimeException("Cannot obtain bean name for Retrofit service interface", e)
+        }
+    }
 }
 
 class RetrofitServiceComponentProvider : ClassPathScanningCandidateComponentProvider(false) {
@@ -73,5 +84,28 @@ class RetrofitServiceComponentProvider : ClassPathScanningCandidateComponentProv
 
     init {
         addIncludeFilter(AnnotationTypeFilter(RetrofitService::class.java, true, true))
+    }
+}
+
+@Suppress("INTEGER_OVERFLOW")
+class RetrofitServiceBeanPostProcessorAdapter : InstantiationAwareBeanPostProcessorAdapter(), BeanFactoryAware {
+
+    companion object {
+        const val BEAN_NAME = "retrofitServiceBeanPostProcessorAdapter"
+    }
+
+    private lateinit var beanFactory: BeanFactory
+
+    override fun setBeanFactory(beanFactory: BeanFactory) {
+        this.beanFactory = beanFactory
+    }
+
+    override fun postProcessBeforeInstantiation(beanClass: Class<*>, beanName: String): Any? {
+        if (beanClass.isAnnotationPresent(RetrofitService::class.java)) {
+            val retrofitService = beanClass.getAnnotation(RetrofitService::class.java)
+            val retrofit = beanFactory.getBean(retrofitService.value, Retrofit::class.java)
+            return retrofit.create(beanClass)
+        }
+        return super.postProcessBeforeInstantiation(beanClass, beanName)
     }
 }

@@ -6,4 +6,4 @@ import org.springframework.stereotype.Component
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 @Component
-annotation class RetrofitService(val value: String = "retrofit")
+annotation class RetrofitService(val name: String = "", val value: String = "retrofit")
