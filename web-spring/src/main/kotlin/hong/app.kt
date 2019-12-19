@@ -1,7 +1,7 @@
 package hong
 
 import hong.integration.spring.retrofit.annotation.RetrofitService
-import hong.integration.spring.retrofit.autoconfigure.EnableRetrofitAutoConfiguration
+import hong.integration.spring.retrofit.autoconfigure.RetrofitServiceScan
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Controller
@@ -10,7 +10,7 @@ import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.GetMapping
 
 @SpringBootApplication
-@EnableRetrofitAutoConfiguration(["hong"])
+@RetrofitServiceScan(["hong"])
 class DemoApplication
 
 @Controller

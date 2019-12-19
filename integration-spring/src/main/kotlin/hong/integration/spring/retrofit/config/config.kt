@@ -1,9 +1,7 @@
 package hong.integration.spring.retrofit.config
 
 import hong.integration.spring.retrofit.annotation.RetrofitService
-import hong.integration.spring.retrofit.autoconfigure.EnableRetrofitAutoConfiguration
-import org.springframework.beans.factory.BeanFactory
-import org.springframework.beans.factory.BeanFactoryAware
+import hong.integration.spring.retrofit.autoconfigure.RetrofitServiceScan
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.AbstractFactoryBean
@@ -20,13 +18,7 @@ import org.springframework.util.ClassUtils
 import retrofit2.Retrofit
 import kotlin.reflect.full.findAnnotation
 
-class RetrofitRegistrar : ImportBeanDefinitionRegistrar, BeanFactoryAware {
-
-    private var beanFactory: BeanFactory? = null
-
-    override fun setBeanFactory(beanFactory: BeanFactory) {
-        this.beanFactory = beanFactory
-    }
+class RetrofitServiceRegistrar : ImportBeanDefinitionRegistrar {
 
     override fun registerBeanDefinitions(importingClassMetadata: AnnotationMetadata, registry: BeanDefinitionRegistry) {
         val packages = getPackagesToScan(importingClassMetadata)
@@ -36,17 +28,11 @@ class RetrofitRegistrar : ImportBeanDefinitionRegistrar, BeanFactoryAware {
             .forEach { register(it, registry) }
     }
 
-    private fun register(beanDefinition: BeanDefinition, registry: BeanDefinitionRegistry) {
-        val builder = BeanDefinitionBuilder.rootBeanDefinition(RetrofitFactoryBean::class.java)
-        builder.addConstructorArgValue(beanDefinition.beanClassName)
-        registry.registerBeanDefinition(beanDefinition.beanClassName!!, builder.beanDefinition)
-    }
-
     private fun getPackagesToScan(importingClassMetadata: AnnotationMetadata): Set<String> {
         val attributes =
-            AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(EnableRetrofitAutoConfiguration::class.java.name))
+            AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(RetrofitServiceScan::class.java.name))
 
-        val value = attributes!!.getStringArray(EnableRetrofitAutoConfiguration::value.name)
+        val value = attributes!!.getStringArray(RetrofitServiceScan::value.name)
 
         val packagesToScan = mutableSetOf<String>()
         packagesToScan.addAll(value)
@@ -57,9 +43,15 @@ class RetrofitRegistrar : ImportBeanDefinitionRegistrar, BeanFactoryAware {
 
         return packagesToScan
     }
+
+    private fun register(beanDefinition: BeanDefinition, registry: BeanDefinitionRegistry) {
+        val builder = BeanDefinitionBuilder.rootBeanDefinition(RetrofitServiceFactoryBean::class.java)
+        builder.addConstructorArgValue(beanDefinition.beanClassName)
+        registry.registerBeanDefinition(beanDefinition.beanClassName!!, builder.beanDefinition)
+    }
 }
 
-class RetrofitFactoryBean(private val beanClass: Class<Any>) : AbstractFactoryBean<Any>() {
+class RetrofitServiceFactoryBean(private val beanClass: Class<Any>) : AbstractFactoryBean<Any>() {
 
     @Autowired
     lateinit var applicationContext: AbstractApplicationContext
@@ -70,9 +62,7 @@ class RetrofitFactoryBean(private val beanClass: Class<Any>) : AbstractFactoryBe
         return retrofit.create(beanClass)
     }
 
-    override fun getObjectType(): Class<*>? {
-        return Any::class.javaObjectType
-    }
+    override fun getObjectType(): Class<*>? = Any::class.javaObjectType
 }
 
 class RetrofitServiceComponentProvider : ClassPathScanningCandidateComponentProvider(false) {
@@ -84,5 +74,3 @@ class RetrofitServiceComponentProvider : ClassPathScanningCandidateComponentProv
         addIncludeFilter(AnnotationTypeFilter(RetrofitService::class.java, true, true))
     }
 }
-
-
