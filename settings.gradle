@@ -1,3 +1,3 @@
 rootProject.name = 'kotlin-setting'
 
-include('meta', 'core', 'integration', 'integration-spring', 'web-spring', 'web-ktor')
+include('meta', 'core', 'integration', 'integration-spring', 'web-spring', 'web-ktor', 'app-javafx')

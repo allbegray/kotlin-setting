@@ -25,9 +25,11 @@
 </#macro>
 
 <#macro css>
+    <link href="<@spring.url '/css/base.css'/>" rel="stylesheet">
 </#macro>
 
 <#macro js>
+    <script src="<@spring.url '/js/base.js'/>"></script>
 </#macro>
 
 <#macro script>

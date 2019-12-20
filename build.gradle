@@ -27,7 +27,7 @@ plugins {
     id "org.springframework.boot" version "2.2.2.RELEASE"
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
 
-    id "org.flywaydb.flyway" version "6.1.1"
+    id "org.flywaydb.flyway" version "6.1.2"
     id 'nu.studer.jooq' version '3.0.3'
 }
 
@@ -210,5 +210,13 @@ project(':web-ktor') {
     dependencies {
         implementation "io.ktor:ktor-server-tomcat:$versions.ktor"
         testImplementation "io.ktor:ktor-server-tests:$versions.ktor"
+    }
+}
+
+project(':app-javafx') {
+    apply plugin: 'application'
+
+    dependencies {
+        implementation "no.tornado:tornadofx:1.7.17"
     }
 }
