@@ -1,13 +1,6 @@
 <#ftl encoding="utf-8"/>
+<#import "../_macro/page.ftlh" as page>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title></title>
-    <meta charset="utf-8"/>
-</head>
-
-<body>
-503.....
-</body>
-</html>
+<@page.defaultpage>
+    503...
+</@page.defaultpage>

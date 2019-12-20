@@ -1,14 +1,15 @@
 <#ftl encoding="utf-8"/>
 <#-- @ftlvariable name="name" type="java.lang.String" -->
+<#import "_macro/page.ftlh" as page>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title></title>
-    <meta charset="utf-8"/>
-</head>
+<@page.defaultpage>
+    <@page.script>
+        111111111
+    </@page.script>
 
-<body>
-${name} ${name?length}
-</body>
-</html>
+    ${name} ${name?length}
+
+    <@page.script>
+        22222222222
+    </@page.script>
+</@page.defaultpage>
