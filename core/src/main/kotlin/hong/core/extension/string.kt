@@ -2,8 +2,6 @@ package hong.core.extension
 
 import java.util.*
 
-fun String.splitLines() = split('\n')
-
 fun String.uuid(): UUID? = try {
     UUID.fromString(this)
 } catch (e: IllegalArgumentException) {
