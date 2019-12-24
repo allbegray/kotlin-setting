@@ -2,5 +2,5 @@
 <#import "../_macro/page.ftlh" as page>
 
 <@page.defaultpage>
-    503...
+    500...
 </@page.defaultpage>
