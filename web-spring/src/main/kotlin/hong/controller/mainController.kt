@@ -15,6 +15,32 @@ import org.springframework.web.bind.annotation.RequestMapping
 import retrofit2.Call
 import retrofit2.http.GET
 
+@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+@Authorize
+annotation class AdminAuthorize(
+    val roles: Array<String> = ["admin"]
+)
+
+@Controller
+@RequestMapping("/login-admin")
+@AdminAuthorize
+class LoginAdminController : BaseController() {
+
+    @GetMapping("/test")
+    fun test() {
+        println()
+    }
+
+    @GetMapping("/test2")
+    fun test2() {
+        println()
+    }
+
+}
+
+
 @Component
 class SimplePolicyAuthentication : PolicyAuthentication {
 
