@@ -1,3 +1,3 @@
 package hong.common.auth
 
-data class User(val username: String, val role: String)
+open class User(val username: String, val role: String)

@@ -1,9 +1,13 @@
 package hong.controller
 
 import hong.common.auth.Authorize
+import hong.common.auth.PolicyAuthentication
+import hong.common.auth.PolicyAuthorize
+import hong.common.auth.User
 import hong.common.web.controller.BaseController
 import hong.integration.spring.retrofit.annotation.RetrofitService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -11,12 +15,64 @@ import org.springframework.web.bind.annotation.RequestMapping
 import retrofit2.Call
 import retrofit2.http.GET
 
+@Component
+class SimplePolicyAuthentication : PolicyAuthentication {
+
+    override fun handle(user: User): Boolean {
+        return true
+    }
+
+}
+
+@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+abstract class PolicyController1
+
+@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+abstract class PolicyController2 : PolicyController1()
+
+@Controller
+@RequestMapping("/login-multi-policy")
+@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+class LoginMultiController : PolicyController2() {
+
+    @GetMapping("/test")
+    @Authorize(roles = ["admin, user"])
+    fun test() {
+        println()
+    }
+
+    @GetMapping("/test2")
+    fun test2() {
+        println()
+    }
+
+}
+
+@Controller
+@RequestMapping("/login-policy")
+@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+class LoginPolicyController : BaseController() {
+
+    @GetMapping("/test")
+    @Authorize(roles = ["admin, user"])
+    fun test() {
+        println()
+    }
+
+    @GetMapping("/test2")
+    fun test2() {
+        println()
+    }
+
+}
+
 @Controller
 @RequestMapping("/login-role")
 class LoginRoleController : BaseController() {
 
     @GetMapping("/test")
     @Authorize(roles = ["admin, user"])
+
     fun test() {
         println()
     }
