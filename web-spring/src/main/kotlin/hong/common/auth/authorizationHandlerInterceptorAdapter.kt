@@ -69,13 +69,14 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
             val user = user()
             if (user != null) {
                 val validRole = validRole(user, annotations.filterIsInstance<Authorize>())
-                val validPolicy = validPolicy(user, annotations.filterIsInstance<PolicyAuthorize>())
+                val validPolicy = validPolicy(user, annotations.filterIsInstance<PolicyAuthorize>().toSet())
 
                 if (validRole && validPolicy) {
                     return true
                 }
             }
 
+            // TODO : ajax or not
             response.sendRedirect("/login")
             return false
         }
@@ -83,7 +84,7 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
         return true
     }
 
-    private fun validRole(user: User, authorizes: List<Authorize>): Boolean {
+    private fun validRole(user: User, authorizes: Collection<Authorize>): Boolean {
         if (authorizes.isEmpty()) {
             return true
         }
@@ -97,7 +98,7 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
         return roles.contains(user.role)
     }
 
-    private fun validPolicy(user: User, authorizes: List<PolicyAuthorize>): Boolean {
+    private fun validPolicy(user: User, authorizes: Collection<PolicyAuthorize>): Boolean {
         if (authorizes.isEmpty()) {
             return true
         }
