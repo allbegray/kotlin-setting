@@ -36,7 +36,7 @@ annotation class PolicyAuthorize(val policy: KClass<out PolicyAuthentication>)
 annotation class AllowAnonymous
 
 interface PolicyAuthentication {
-    fun handle(user: User): Boolean
+    fun handle(principal: Principal): Boolean
 }
 
 @Component
@@ -66,10 +66,10 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
                 return true
             }
 
-            val user = user()
-            if (user != null) {
-                val validRole = validRole(user, annotations.filterIsInstance<Authorize>())
-                val validPolicy = validPolicy(user, annotations.filterIsInstance<PolicyAuthorize>().toSet())
+            val principal = principal()
+            if (principal != null) {
+                val validRole = validRole(principal, annotations.filterIsInstance<Authorize>())
+                val validPolicy = validPolicy(principal, annotations.filterIsInstance<PolicyAuthorize>().toSet())
 
                 if (validRole && validPolicy) {
                     return true
@@ -84,7 +84,7 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
         return true
     }
 
-    private fun validRole(user: User, authorizes: Collection<Authorize>): Boolean {
+    private fun validRole(principal: Principal, authorizes: Collection<Authorize>): Boolean {
         if (authorizes.isEmpty()) {
             return true
         }
@@ -95,21 +95,24 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
             .map(String::trim)
             .filterNot { it.isBlank() }
 
-        return roles.contains(user.role)
+        return roles.contains(principal.role)
     }
 
-    private fun validPolicy(user: User, authorizes: Collection<PolicyAuthorize>): Boolean {
+    private fun validPolicy(principal: Principal, authorizes: Collection<PolicyAuthorize>): Boolean {
         if (authorizes.isEmpty()) {
             return true
         }
 
         val authentications = authorizes.map { applicationContext.getBean(it.policy.java) }
 
-        return authorizes.size == authentications.filter { it.handle(user) }.size
+        return authorizes.size == authentications.filter { it.handle(principal) }.size
     }
 
-    private fun user(): User? {
-        return User(username = "hong", role = "user")
+    private fun principal(): Principal? {
+        return object : Principal {
+            override val username: String = "hong"
+            override val role: String = "user"
+        }
     }
 
 }

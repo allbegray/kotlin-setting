@@ -3,7 +3,7 @@ package hong.controller
 import hong.common.auth.Authorize
 import hong.common.auth.PolicyAuthentication
 import hong.common.auth.PolicyAuthorize
-import hong.common.auth.User
+import hong.common.auth.Principal
 import hong.common.web.controller.BaseController
 import hong.integration.spring.retrofit.annotation.RetrofitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +44,7 @@ class LoginAdminController : BaseController() {
 @Component
 class SimplePolicyAuthentication : PolicyAuthentication {
 
-    override fun handle(user: User): Boolean {
+    override fun handle(principal: Principal): Boolean {
         return true
     }
 
