@@ -43,11 +43,11 @@ interface Form {
             is Collection<*> -> value
             else -> listOf(value)
         }
-        return list.map { formatter(it, annotations) }
+        return list.mapNotNull { formatter(it, annotations) }
     }
 
-    private fun formatter(value: Any?, annotations: List<Annotation>): String {
-        if (value == null) return ""
+    private fun formatter(value: Any?, annotations: List<Annotation>): String? {
+        if (value == null) return null
         if (value is Enum<*>) return value.name
         if (value is TemporalAccessor) {
             val dateTimeFormat = annotations.firstOrNull { it is DateTimeFormat } as? DateTimeFormat
@@ -64,7 +64,8 @@ interface Form {
                 return dateTimeFormatter.format(value)
             }
         }
-        return value.toString()
+        // TODO : support Date, Calendar
+        return value.toString().trim().ifEmpty { null }
     }
 }
 

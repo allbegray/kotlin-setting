@@ -5,12 +5,14 @@ import hong.common.auth.PolicyAuthentication
 import hong.common.auth.PolicyAuthorize
 import hong.common.auth.Principal
 import hong.common.web.controller.BaseController
+import hong.common.web.router.Router
 import hong.integration.spring.retrofit.annotation.RetrofitService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import retrofit2.Call
 import retrofit2.http.GET
@@ -135,10 +137,29 @@ class LoginMethodController : BaseController() {
 }
 
 @Controller
+@RequestMapping("/test-arg/{hong1}")
+class ArgController {
+
+    @GetMapping("/test/{userId}/test222")
+    fun pathVarialbeTest(@PathVariable("userId") userId: String) {
+
+    }
+
+    @GetMapping("/test/test222")
+    fun pathVarialbeTest22222222() {
+
+    }
+
+}
+
+@Controller
 class MainController : BaseController() {
 
     @Autowired
     lateinit var githubApiService: GithubApiService
+
+    @Autowired
+    lateinit var router: Router
 
     @GetMapping(value = ["", "/", "/index"])
     fun main(model: Model): String {
@@ -146,6 +167,17 @@ class MainController : BaseController() {
 
         model.addAttribute("name", body)
         return "main"
+    }
+
+    @GetMapping("/router")
+    fun router() {
+        val mvcUrl2 = router.mvcUrl(ArgController::pathVarialbeTest, "123")
+            .buildAndExpand(mapOf("hong1" to "55555555")).toUriString()
+
+        val mvcUrl = router.mvcUrl(ArgController::pathVarialbeTest22222222)
+            .buildAndExpand(mapOf("hong1" to "55555555")).toUriString()
+
+        println()
     }
 
     @GetMapping("/badRequest")
