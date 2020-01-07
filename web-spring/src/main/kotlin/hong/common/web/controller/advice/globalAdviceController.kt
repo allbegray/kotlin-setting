@@ -1,7 +1,7 @@
 package hong.common.web.controller.advice
 
 import hong.common.web.controller.RequestGlobal
-import hong.common.web.router.Router
+import hong.common.web.router.ReverseRouter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.propertyeditors.StringTrimmerEditor
 import org.springframework.web.bind.WebDataBinder
@@ -16,13 +16,13 @@ class GlobalAdviceController {
     lateinit var g: RequestGlobal
 
     @Autowired
-    lateinit var r: Router
+    lateinit var r: ReverseRouter
 
     @ModelAttribute("g")
     fun requestGlobal(): RequestGlobal = g
 
     @ModelAttribute("r")
-    fun router(): Router = r
+    fun reverseRouter(): ReverseRouter = r
 
     @InitBinder
     fun initBinder(binder: WebDataBinder) {

@@ -5,7 +5,7 @@ import hong.common.auth.PolicyAuthentication
 import hong.common.auth.PolicyAuthorize
 import hong.common.auth.Principal
 import hong.common.web.controller.BaseController
-import hong.common.web.router.Router
+import hong.common.web.router.ReverseRouter
 import hong.integration.spring.retrofit.annotation.RetrofitService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -140,9 +140,13 @@ class LoginMethodController : BaseController() {
 @RequestMapping("/test-arg/{hong1}")
 class ArgController {
 
+    @Autowired
+    lateinit var reverseRouter: ReverseRouter
+
     @GetMapping("/test/{userId}/test222")
     fun pathVarialbeTest(@PathVariable("userId") userId: String) {
-
+        val currentUrlFor = reverseRouter.currentUrlFor()
+        println()
     }
 
     @GetMapping("/test/test222")
@@ -159,7 +163,7 @@ class MainController : BaseController() {
     lateinit var githubApiService: GithubApiService
 
     @Autowired
-    lateinit var router: Router
+    lateinit var reverseRouter: ReverseRouter
 
     @GetMapping(value = ["", "/", "/index"])
     fun main(model: Model): String {
@@ -171,11 +175,9 @@ class MainController : BaseController() {
 
     @GetMapping("/router")
     fun router() {
-        val mvcUrl2 = router.mvcUrl(ArgController::pathVarialbeTest, "123")
-            .buildAndExpand(mapOf("hong1" to "55555555")).toUriString()
+        val mvcUrl2 = reverseRouter.urlFor(ArgController::pathVarialbeTest).args("hong1" to "555", "userId" to "aaaaaaa").build()
 
-        val mvcUrl = router.mvcUrl(ArgController::pathVarialbeTest22222222)
-            .buildAndExpand(mapOf("hong1" to "55555555")).toUriString()
+        val mvcUrl = reverseRouter.urlFor(ArgController::pathVarialbeTest22222222).args("hong1" to "555").build()
 
         println()
     }
