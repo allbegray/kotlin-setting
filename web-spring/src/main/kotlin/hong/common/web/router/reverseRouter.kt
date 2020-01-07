@@ -1,9 +1,7 @@
 package hong.common.web.router
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
-import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMethodMappingNamingStrategy
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
 import org.springframework.web.util.UriComponentsBuilder
 import java.nio.charset.StandardCharsets
@@ -102,13 +100,10 @@ class ReverseRouter {
     lateinit var requestMappingHandlerMapping: RequestMappingHandlerMapping
 
     @Autowired
-    lateinit var applicationContext: ApplicationContext
-
-    @Autowired
     lateinit var request: HttpServletRequest
 
     companion object {
-        private const val SEPARATOR = RequestMappingInfoHandlerMethodMappingNamingStrategy.SEPARATOR
+        private const val SEPARATOR = "."
     }
 
     fun currentUrlFor(): CurrentUriBuilder {
@@ -117,22 +112,24 @@ class ReverseRouter {
 
     fun urlFor(function: KFunction<*>): UriBuilder {
         val methodName = function.javaMethod!!
-        val beanNames = applicationContext.getBeanNamesForType(methodName.declaringClass)
-
-        return urlFor(beanNames[0] + SEPARATOR + methodName.name)
+        val controllerName = methodName.declaringClass.simpleName
+        return urlFor(controllerName + SEPARATOR + methodName.name)
     }
 
+    /**
+     * @param pattern controllerName#methodName (example : mainController#main)
+     */
     fun urlFor(pattern: String): UriBuilder {
         val split = pattern.split(SEPARATOR)
         if (split.size != 2) {
             throw RuntimeException("pattern error")
         }
 
-        val (beanName, methodName) = split[0].substringAfterLast(".") to split[1]
+        val (controllerName, methodName) = split[0].decapitalize() to split[1]
 
         val handler = requestMappingHandlerMapping.handlerMethods
             .filter { (_, handler) ->
-                beanName == handler.bean.toString() && methodName == handler.method.name
+                controllerName == handler.beanType.simpleName.decapitalize() && methodName == handler.method.name
             }
             .toList()
             .firstOrNull()

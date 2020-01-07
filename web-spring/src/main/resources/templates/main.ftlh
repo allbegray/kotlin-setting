@@ -24,14 +24,14 @@
     </div>
 
     <div>
-    ${r.urlFor("loginAdminController#test")}
+    ${r.urlFor("loginAdminController.test")}
 
     </div>
     <div>
-        ${r.urlFor("argController#pathVarialbeTest").arg("hong1", "zzz").arg("userId", "ggg")}
+        ${r.urlFor("argController.pathVarialbeTest").arg("hong1", "zzz").arg("userId", "ggg")}
     </div>
     <div>
-        ${r.urlFor("argController#pathVarialbeTest22222222").arg("hong1", "aaaa")}
+        ${r.urlFor("argController.pathVarialbeTest22222222").arg("hong1", "aaaa")}
     </div>
 
     <@page.script>
