@@ -20,10 +20,8 @@ import retrofit2.http.GET
 @Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@Authorize
-annotation class AdminAuthorize(
-    val roles: Array<String> = ["admin"]
-)
+@Authorize(roles = ["admin"])
+annotation class AdminAuthorize
 
 @Controller
 @RequestMapping("/login-admin")
@@ -44,7 +42,7 @@ class LoginAdminController : BaseController() {
 
 
 @Component
-class SimplePolicyAuthentication : PolicyAuthentication {
+class SimplePolicyAuthentication1 : PolicyAuthentication {
 
     override fun handle(principal: Principal): Boolean {
         return true
@@ -52,15 +50,33 @@ class SimplePolicyAuthentication : PolicyAuthentication {
 
 }
 
-@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+@Component
+class SimplePolicyAuthentication2 : PolicyAuthentication {
+
+    override fun handle(principal: Principal): Boolean {
+        return true
+    }
+
+}
+
+@Component
+class SimplePolicyAuthentication3 : PolicyAuthentication {
+
+    override fun handle(principal: Principal): Boolean {
+        return true
+    }
+
+}
+
+@PolicyAuthorize(policy = SimplePolicyAuthentication1::class)
 abstract class PolicyController1
 
-@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+@PolicyAuthorize(policy = SimplePolicyAuthentication2::class)
 abstract class PolicyController2 : PolicyController1()
 
 @Controller
 @RequestMapping("/login-multi-policy")
-@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+@PolicyAuthorize(policy = SimplePolicyAuthentication3::class)
 class LoginMultiController : PolicyController2() {
 
     @GetMapping("/test")
@@ -78,7 +94,7 @@ class LoginMultiController : PolicyController2() {
 
 @Controller
 @RequestMapping("/login-policy")
-@PolicyAuthorize(policy = SimplePolicyAuthentication::class)
+@PolicyAuthorize(policy = SimplePolicyAuthentication1::class)
 class LoginPolicyController : BaseController() {
 
     @GetMapping("/test")

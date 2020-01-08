@@ -6,33 +6,38 @@ import org.springframework.core.annotation.AnnotatedElementUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.method.HandlerMethod
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter
+import java.lang.annotation.Inherited
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import kotlin.reflect.KClass
-import kotlin.reflect.full.allSuperclasses
 
-@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-@Retention(AnnotationRetention.RUNTIME)
-@MustBeDocumented
 /**
  * or condition
  */
-annotation class Authorize(val roles: Array<String> = [])
-
-@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS/*, AnnotationTarget.FUNCTION*/)
-@Retention(AnnotationRetention.RUNTIME)
-@MustBeDocumented
-/**
- * and condition
- */
-annotation class PolicyAuthorize(val policy: KClass<out PolicyAuthentication>)
-
 @Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
+@Inherited
+@Repeatable
+annotation class Authorize(val roles: Array<String> = [])
+
+/**
+ * and condition
+ */
+@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+@Inherited
+@Repeatable
+annotation class PolicyAuthorize(val policy: KClass<out PolicyAuthentication>)
+
 /**
  * top level
  */
+@Target(AnnotationTarget.ANNOTATION_CLASS, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+@Inherited
 annotation class AllowAnonymous
 
 interface PolicyAuthentication {
@@ -50,12 +55,9 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler is HandlerMethod) {
-            val targets = listOf(
-                handler.method,
-                handler.beanType
-            ) + handler.beanType.kotlin.allSuperclasses.map { it.java }
-
-            val annotations = targets.flatMap { AnnotatedElementUtils.findAllMergedAnnotations(it, annotationTypes) }
+            val annotations = listOf(handler.method, handler.beanType)
+                .flatMap { AnnotatedElementUtils.findAllMergedAnnotations(it, annotationTypes) }
+                .toSet()
 
             if (annotations.isEmpty()) {
                 return true
