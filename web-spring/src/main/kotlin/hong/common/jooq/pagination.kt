@@ -3,6 +3,9 @@ package hong.common.jooq
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.SelectLimitStep
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -48,6 +51,17 @@ class Pagination<E>(
                 offset,
                 navSize
             )
+        }
+
+        fun <R : Record, E> of(
+            ctx: DSLContext,
+            query: SelectLimitStep<R>,
+            pageable: Pageable,
+            mapper: (record: R) -> E
+        ): Page<E> {
+            val total = ctx.fetchCount(query)
+            val content = query.limit(pageable.offset, pageable.pageSize).map(mapper)
+            return PageImpl<E>(content, pageable, total.toLong())
         }
     }
 
