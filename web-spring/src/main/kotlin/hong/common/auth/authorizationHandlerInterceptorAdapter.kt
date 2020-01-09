@@ -71,7 +71,7 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
             val principal = principal()
             if (principal != null) {
                 val validRole = validRole(principal, annotations.filterIsInstance<Authorize>())
-                val validPolicy = validPolicy(principal, annotations.filterIsInstance<PolicyAuthorize>().toSet())
+                val validPolicy = validPolicy(principal, annotations.filterIsInstance<PolicyAuthorize>())
 
                 if (validRole && validPolicy) {
                     return true
@@ -83,7 +83,7 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
             return false
         }
 
-        return true
+        return super.preHandle(request, response, handler)
     }
 
     private fun validRole(principal: Principal, authorizes: Collection<Authorize>): Boolean {

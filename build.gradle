@@ -199,6 +199,8 @@ project(':web-spring') {
             exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
         }
 
+        implementation "org.javassist:javassist:3.26.0-GA"
+
         implementation "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.1"
 
         implementation "com.squareup.retrofit2:converter-jackson:$versions.retrofit"
