@@ -31,10 +31,10 @@ class Pagination<E>(
         fun <R : Record, E> of(
             ctx: DSLContext,
             query: SelectLimitStep<R>,
-            mapper: (record: R) -> E,
             page: Int,
             pageSize: Int = 20,
-            navSize: Int = 10
+            navSize: Int = 10,
+            mapper: (record: R) -> E
         ): Pagination<E> {
             val total = ctx.fetchCount(query)
             val offset = (page - 1) * pageSize
