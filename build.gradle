@@ -129,7 +129,7 @@ project(':meta') {
     }
 
     dependencies {
-        implementation "org.jooq:jooq"
+        compile "org.jooq:jooq"
         implementation database.library
         jooqRuntime database.library
     }
@@ -188,6 +188,7 @@ project(':web-spring') {
 
         implementation 'org.springframework.boot:spring-boot-starter-freemarker'
         implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
         implementation('org.springframework.boot:spring-boot-starter-web') {
             exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
         }
