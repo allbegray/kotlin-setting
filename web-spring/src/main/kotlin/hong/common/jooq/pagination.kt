@@ -1,9 +1,6 @@
 package hong.common.jooq
 
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.SelectLimitStep
-import org.jooq.SelectWhereStep
+import org.jooq.*
 import org.jooq.impl.DSL
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -58,27 +55,30 @@ class Pagination<E>(
 
         fun <R : Record, E> of(
             ctx: DSLContext,
-            query: SelectWhereStep<R>,
+            query: SelectLimitStep<R>,
             pageable: Pageable,
             mapper: (record: R) -> E
         ): Page<E> {
-            val sortFields = pageable.sort.map {
-                val property = it.property
-                val direction = it.direction
-
-                val field = DSL.field(property)
-                if (direction == Sort.Direction.ASC) {
-                    field.asc()
-                } else {
-                    field.desc()
-                }
-            }.toList()
-            val sortedQuery = query.orderBy(sortFields)
-            val total = ctx.fetchCount(sortedQuery)
-            val content = sortedQuery.limit(pageable.offset, pageable.pageSize).map(mapper)
+            val total = ctx.fetchCount(query)
+            val content = query.limit(pageable.offset, pageable.pageSize).map(mapper)
             return PageImpl<E>(content, pageable, total.toLong())
         }
     }
 
     data class Entry<E>(val index: Int, val item: E)
+}
+
+fun <R : Record> SelectOrderByStep<R>.orderBy(pageable: Pageable): SelectSeekStepN<R> {
+    val fields = pageable.sort.map {
+        val property = it.property
+        val direction = it.direction
+
+        val field = DSL.field(property)
+        if (direction == Sort.Direction.ASC) {
+            field.asc()
+        } else {
+            field.desc()
+        }
+    }.toList()
+    return this.orderBy(fields)
 }
