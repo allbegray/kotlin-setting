@@ -1,0 +1,24 @@
+{
+  "name": "core-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.4",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.31"
+  },
+  "scripts": {
+    "start": "webpack-dev-server --mode development",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
