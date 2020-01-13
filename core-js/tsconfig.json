@@ -2,10 +2,13 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
+    "moduleResolution": "node",
+    "allowJs": true,
     "sourceMap": true
   },
   "include": [
-    "src/**/*"
+    "index.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

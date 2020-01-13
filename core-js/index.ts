@@ -1,34 +1,14 @@
 import * as $ from 'jquery'
-
-class Student {
-    fullName: string;
-    constructor(public firstName: string, public middleInitial: string, public lastName: string) {
-        this.fullName = firstName + " " + middleInitial + " " + lastName;
-    }
-}
-
-interface Person {
-    firstName: string;
-    lastName: string;
-}
-
-function greeter(person: Person) {
-    return "Hello, " + person.firstName + " " + person.lastName;
-}
+import * as _s from 'underscore.string'
+import {jqueryExtends} from './src/as'
 
 $(function () {
-    let user = new Student("Jane", "M.", "User");
-    document.body.textContent = greeter(user);
-
-    $.fn.extend({
-        asStopPropagation: function () {
-            return this.each(() => {
-                $(this).on('click', e => {
-                    e.stopPropagation();
-                });
-            });
-        }
-    });
-
-    console.log($.fn);
+    $.fn.extend(jqueryExtends);
+    Object.keys($.fn)
+        .filter(value => value.length > 2 && value.startsWith("as"))
+        .forEach(value => $(`.-${_s.dasherize(value)}`)[value]());
 });
+
+window['$'] = $;
+// @ts-ignore
+window['_s'] = _s;

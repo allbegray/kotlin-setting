@@ -1,21 +1,22 @@
 const path = require('path');
 
 module.exports = {
+    mode: 'development',
     entry: path.join(__dirname, 'index.ts'),
     output: {
-        filename: 'index.js',
-        path: __dirname
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'bundle.min.js'
     },
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                loader: 'ts-loader',
+                loader: 'awesome-typescript-loader',
                 exclude: /node_modules/,
             },
         ]
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"]
-    },
+    }
 };
