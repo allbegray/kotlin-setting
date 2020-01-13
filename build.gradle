@@ -189,6 +189,7 @@ project(':web-spring') {
         implementation 'org.springframework.boot:spring-boot-starter-freemarker'
         implementation 'org.springframework.boot:spring-boot-starter-jdbc'
         implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+        implementation 'org.springframework.boot:spring-boot-starter-jooq'
         implementation('org.springframework.boot:spring-boot-starter-web') {
             exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
         }

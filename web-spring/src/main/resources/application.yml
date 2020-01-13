@@ -6,3 +6,5 @@ spring:
     username: postgres
     password: 1234
     driver-class-name: org.postgresql.Driver
+  jooq:
+    sql-dialect: postgres
