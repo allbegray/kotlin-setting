@@ -38,6 +38,9 @@ class Workbook(type: WorkbookType) {
                 if (option.font.name != null) {
                     fontName = option.font.name
                 }
+                if (option.font.color != null) {
+                    color = option.font.color.index
+                }
                 italic = option.font.italic
                 strikeout = option.font.strikeout
                 underline = option.font.underline.byte
@@ -104,6 +107,7 @@ data class StyleOption(
 
     data class FontOption(
         val name: String? = null,
+        val color: IndexedColors? = null,
         val bold: Boolean = false,
         val height: Short? = null,
         val italic: Boolean = false,
@@ -130,6 +134,10 @@ class Sheet(
 
     fun columnWidth(columnIndex: Int, width: Int) {
         sheet.setColumnWidth(columnIndex, width)
+    }
+
+    fun autoSizeColumn(columnIndex: Int) {
+        sheet.autoSizeColumn(columnIndex)
     }
 }
 
