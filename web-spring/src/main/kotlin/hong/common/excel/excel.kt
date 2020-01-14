@@ -17,6 +17,47 @@ enum class WorkbookType {
     HSSF, XSSF, SXSSF
 }
 
+data class StyleOption(
+    val font: FontOption = FontOption(),
+    val alignment: HorizontalAlignment? = null,
+    val verticalAlignment: VerticalAlignment? = null,
+    val border: BorderOption = BorderOption(),
+    val format: String? = null,
+    val wrapText: Boolean = false
+) {
+    companion object {
+        const val CURRENCY = "#,##0"
+        const val PERCENTAGE = "0.00"
+    }
+
+    data class BorderOption(
+        val top: BorderStyle = BorderStyle.NONE,
+        val bottom: BorderStyle = BorderStyle.NONE,
+        val left: BorderStyle = BorderStyle.NONE,
+        val right: BorderStyle = BorderStyle.NONE
+    ) {
+        companion object {
+            fun of(borderStyle: BorderStyle): BorderOption {
+                return BorderOption(borderStyle, borderStyle, borderStyle, borderStyle)
+            }
+        }
+    }
+
+    data class FontOption(
+        val name: String? = null,
+        val color: IndexedColors? = null,
+        val bold: Boolean = false,
+        val height: Short? = null,
+        val italic: Boolean = false,
+        val strikeout: Boolean = false,
+        val underline: Underline = Underline.NONE
+    ) {
+        enum class Underline(val byte: Byte) {
+            NONE(Font.U_NONE), SINGLE(Font.U_SINGLE), DOUBLE(Font.U_DOUBLE)
+        }
+    }
+}
+
 class Workbook(type: WorkbookType) {
     private val workbook: org.apache.poi.ss.usermodel.Workbook = when (type) {
         WorkbookType.HSSF -> HSSFWorkbook()
@@ -25,8 +66,8 @@ class Workbook(type: WorkbookType) {
     }
     val styles = mutableMapOf<String, CellStyle>()
 
-    fun sheet(sheetName: String, init: Sheet.() -> Unit): Sheet =
-        Sheet(this, workbook.createSheet(sheetName)).apply(init)
+    fun sheet(sheetName: String? = null, init: Sheet.() -> Unit): Sheet =
+        Sheet(this, if (sheetName != null) workbook.createSheet(sheetName) else workbook.createSheet()).apply(init)
 
     fun style(styleName: String, option: StyleOption) {
         styles[styleName] = workbook.createCellStyle().apply {
@@ -79,55 +120,16 @@ class Workbook(type: WorkbookType) {
     fun generate(os: OutputStream) = workbook.use { os.use { workbook.write(os) } }
 }
 
-data class StyleOption(
-    val font: FontOption = FontOption(),
-    val alignment: HorizontalAlignment? = null,
-    val verticalAlignment: VerticalAlignment? = null,
-    val border: BorderOption = BorderOption(),
-    val format: String? = null,
-    val wrapText: Boolean = false
-) {
-    companion object {
-        const val CURRENCY = "#,##0"
-        const val PERCENTAGE = "0.00"
-    }
-
-    data class BorderOption(
-        val top: BorderStyle = BorderStyle.NONE,
-        val bottom: BorderStyle = BorderStyle.NONE,
-        val left: BorderStyle = BorderStyle.NONE,
-        val right: BorderStyle = BorderStyle.NONE
-    ) {
-        companion object {
-            fun of(borderStyle: BorderStyle): BorderOption {
-                return BorderOption(borderStyle, borderStyle, borderStyle, borderStyle)
-            }
-        }
-    }
-
-    data class FontOption(
-        val name: String? = null,
-        val color: IndexedColors? = null,
-        val bold: Boolean = false,
-        val height: Short? = null,
-        val italic: Boolean = false,
-        val strikeout: Boolean = false,
-        val underline: Underline = Underline.NONE
-    ) {
-        enum class Underline(val byte: Byte) {
-            NONE(Font.U_NONE), SINGLE(Font.U_SINGLE), DOUBLE(Font.U_DOUBLE)
-        }
-    }
-}
-
 class Sheet(
     private val workbook: Workbook,
     private val sheet: org.apache.poi.ss.usermodel.Sheet
 ) {
-    private var rownum: Int = 0
-
-    fun row(height: Short = sheet.defaultRowHeight, init: Row.() -> Unit): Row {
-        return Row(workbook, this, sheet.createRow(rownum++).apply {
+    fun row(
+        @Suppress("SpellCheckingInspection") rownum: Int = sheet.physicalNumberOfRows,
+        height: Short = sheet.defaultRowHeight,
+        init: Row.() -> Unit
+    ): Row {
+        return Row(workbook, this, sheet.createRow(rownum).apply {
             this.height = height
         }).apply(init)
     }
@@ -146,27 +148,32 @@ class Row(
     private val sheet: Sheet,
     private val row: org.apache.poi.ss.usermodel.Row
 ) {
-    private var column: Int = 0
     var height: Short
         set(value) {
             row.height = value
         }
         get() = row.height
 
-    fun cell(value: String?, style: String? = null, init: (Cell.() -> Unit)? = null): Cell {
-        return cell2(value, style, init)
+    fun cell(
+        value: String?,
+        style: String? = null,
+        column: Int = row.physicalNumberOfCells,
+        init: (Cell.() -> Unit)? = null
+    ): Cell {
+        return cell(column, value, style, init)
     }
 
     fun cell(
         value: Number?,
-        defaultZero: Boolean = true,
         style: String? = null,
+        defaultZero: Boolean = true,
+        column: Int = row.physicalNumberOfCells,
         init: (Cell.() -> Unit)? = null
     ): Cell {
-        return cell2(value?.toDouble() ?: if (defaultZero) 0.0 else null, style)
+        return cell(column, value?.toDouble() ?: if (defaultZero) 0.0 else null, style, init)
     }
 
-    private fun cell2(value: Any?, style: String? = null, init: (Cell.() -> Unit)? = null): Cell {
+    private fun cell(column: Int, value: Any?, style: String? = null, init: (Cell.() -> Unit)? = null): Cell {
         val cell = row.createCell(column)
         if (value == null) {
             cell.setCellValue("")
@@ -198,6 +205,14 @@ class Cell(
     private val row: Row,
     private val cell: org.apache.poi.ss.usermodel.Cell
 ) {
+    var cellType: CellType
+        set(value) {
+            cell.cellType = value
+        }
+        get() {
+            return cell.cellType
+        }
+
     fun columnWidth(width: Int) {
         sheet.columnWidth(cell.columnIndex, width)
     }
@@ -210,10 +225,14 @@ fun main() {
         style("bold", StyleOption(font = StyleOption.FontOption(bold = true)))
         sheet("sheetName") {
             row {
-                cell("hahaha", "bold")
-                cell("testest", "bold")
+                cell("hahaha1", "bold")
+                cell(0.0, "bold")
+            }
+            row {
+                cell("hahaha2", "bold")
+                cell("testest2", "bold")
             }
         }
-        generate(File("asdfasdfsdaf").outputStream())
+        generate(File("d:\\123123.xlsx").outputStream())
     }
 }
