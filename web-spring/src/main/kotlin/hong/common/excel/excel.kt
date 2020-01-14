@@ -66,6 +66,10 @@ class Workbook(type: WorkbookType) {
     }
     val styles = mutableMapOf<String, CellStyle>()
 
+    fun richTextString(value: String): RichTextString {
+        return workbook.creationHelper.createRichTextString(value)
+    }
+
     fun sheet(sheetName: String? = null, init: Sheet.() -> Unit): Sheet =
         Sheet(this, if (sheetName != null) workbook.createSheet(sheetName) else workbook.createSheet()).apply(init)
 
@@ -129,7 +133,7 @@ class Sheet(
         height: Short = sheet.defaultRowHeight,
         init: Row.() -> Unit
     ): Row {
-        return Row(workbook, this, sheet.createRow(rownum).apply {
+        return Row(workbook, sheet.createRow(rownum).apply {
             this.height = height
         }).apply(init)
     }
@@ -145,7 +149,6 @@ class Sheet(
 
 class Row(
     private val workbook: Workbook,
-    private val sheet: Sheet,
     private val row: org.apache.poi.ss.usermodel.Row
 ) {
     var height: Short
@@ -156,6 +159,15 @@ class Row(
 
     fun cell(
         value: String?,
+        style: String? = null,
+        column: Int = row.physicalNumberOfCells,
+        init: (Cell.() -> Unit)? = null
+    ): Cell {
+        return cell(column, value, style, init)
+    }
+
+    fun cell(
+        value: RichTextString,
         style: String? = null,
         column: Int = row.physicalNumberOfCells,
         init: (Cell.() -> Unit)? = null
@@ -192,7 +204,7 @@ class Row(
         if (style != null) {
             cell.cellStyle = workbook.styles[style]
         }
-        return Cell(sheet, this, cell).apply {
+        return Cell(cell).apply {
             if (init != null) {
                 init()
             }
@@ -200,11 +212,7 @@ class Row(
     }
 }
 
-class Cell(
-    private val sheet: Sheet,
-    private val row: Row,
-    private val cell: org.apache.poi.ss.usermodel.Cell
-) {
+class Cell(private val cell: org.apache.poi.ss.usermodel.Cell) {
     var cellType: CellType
         set(value) {
             cell.cellType = value
@@ -214,7 +222,7 @@ class Cell(
         }
 
     fun columnWidth(width: Int) {
-        sheet.columnWidth(cell.columnIndex, width)
+        cell.row.sheet.setColumnWidth(cell.columnIndex, width)
     }
 }
 
@@ -226,6 +234,7 @@ fun main() {
         sheet("sheetName") {
             row {
                 cell("hahaha1", "bold")
+                cell(richTextString("asdfsadf"))
                 cell(0.0, "bold")
             }
             row {
