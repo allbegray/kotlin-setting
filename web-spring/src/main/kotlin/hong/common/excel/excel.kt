@@ -124,6 +124,8 @@ class Workbook(type: WorkbookType) {
     fun generate(os: OutputStream) = workbook.use { os.use { workbook.write(os) } }
 }
 
+fun workbook(type: WorkbookType = WorkbookType.XSSF, init: Workbook.() -> Unit): Workbook = Workbook(type).apply(init)
+
 class Sheet(
     private val workbook: Workbook,
     private val sheet: org.apache.poi.ss.usermodel.Sheet
@@ -220,13 +222,7 @@ class Cell(private val cell: org.apache.poi.ss.usermodel.Cell) {
         get() {
             return cell.cellType
         }
-
-    fun columnWidth(width: Int) {
-        cell.row.sheet.setColumnWidth(cell.columnIndex, width)
-    }
 }
-
-fun workbook(type: WorkbookType = WorkbookType.XSSF, init: Workbook.() -> Unit): Workbook = Workbook(type).apply(init)
 
 fun main() {
     workbook {
