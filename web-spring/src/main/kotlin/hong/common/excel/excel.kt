@@ -13,15 +13,15 @@ import java.util.*
 import javax.servlet.http.HttpServletResponse
 
 @Suppress("SpellCheckingInspection")
-enum class WorkbookType {
-    HSSF, XSSF, SXSSF
+enum class WorkbookType(val extension: String) {
+    HSSF("xls"), XSSF("xlsx"), SXSSF("xlsx")
 }
 
 data class StyleOption(
-    val font: FontOption = FontOption(),
+    val font: Font = Font(),
     val alignment: HorizontalAlignment? = null,
     val verticalAlignment: VerticalAlignment? = null,
-    val border: BorderOption = BorderOption(),
+    val border: Border = Border(),
     val format: String? = null,
     val wrapText: Boolean = false
 ) {
@@ -30,20 +30,20 @@ data class StyleOption(
         const val PERCENTAGE = "0.00"
     }
 
-    data class BorderOption(
+    data class Border(
         val top: BorderStyle = BorderStyle.NONE,
         val bottom: BorderStyle = BorderStyle.NONE,
         val left: BorderStyle = BorderStyle.NONE,
         val right: BorderStyle = BorderStyle.NONE
     ) {
         companion object {
-            fun of(borderStyle: BorderStyle): BorderOption {
-                return BorderOption(borderStyle, borderStyle, borderStyle, borderStyle)
+            fun of(borderStyle: BorderStyle): Border {
+                return Border(borderStyle, borderStyle, borderStyle, borderStyle)
             }
         }
     }
 
-    data class FontOption(
+    data class Font(
         val name: String? = null,
         val color: IndexedColors? = null,
         val bold: Boolean = false,
@@ -53,7 +53,9 @@ data class StyleOption(
         val underline: Underline = Underline.NONE
     ) {
         enum class Underline(val byte: Byte) {
-            NONE(Font.U_NONE), SINGLE(Font.U_SINGLE), DOUBLE(Font.U_DOUBLE)
+            NONE(org.apache.poi.ss.usermodel.Font.U_NONE),
+            SINGLE(org.apache.poi.ss.usermodel.Font.U_SINGLE),
+            DOUBLE(org.apache.poi.ss.usermodel.Font.U_DOUBLE)
         }
     }
 }
@@ -226,7 +228,7 @@ class Cell(private val cell: org.apache.poi.ss.usermodel.Cell) {
 
 fun main() {
     workbook {
-        style("bold", StyleOption(font = StyleOption.FontOption(bold = true)))
+        style("bold", StyleOption(font = StyleOption.Font(bold = true)))
         sheet("sheetName") {
             row {
                 cell("hahaha1", "bold")
