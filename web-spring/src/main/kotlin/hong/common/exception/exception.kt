@@ -14,3 +14,9 @@ sealed class BaseException : RuntimeException() {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     object NotFound : BaseException()
 }
+
+class StorageException : RuntimeException {
+    constructor(message: String, cause: Exception?) : super(message, cause)
+    constructor(message: String) : super(message)
+    constructor(cause: Exception) : super(cause)
+}
