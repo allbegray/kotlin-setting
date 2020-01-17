@@ -186,6 +186,9 @@ class MainController : BaseController() {
         val body = githubApiService.get().execute().body()
 
         model.addAttribute("name", body)
+
+        g.alert("test\ntest")
+
         return "main"
     }
 

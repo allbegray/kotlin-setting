@@ -1,5 +1,6 @@
 <#ftl encoding="utf-8"/>
 <#import "/spring.ftl" as spring/>
+<#-- @ftlvariable name="g" type="hong.common.web.controller.RequestGlobal" -->
 
 <#global scripts=''>
 
@@ -12,6 +13,11 @@
     <#nested/>
     <@js/>
     ${scripts}
+    <#list g.popAlerts() as msg>
+        <script>
+            alert('${msg?replace("\n", "\\n")}');
+        </script>
+    </#list>
     </body>
     </html>
 </#macro>

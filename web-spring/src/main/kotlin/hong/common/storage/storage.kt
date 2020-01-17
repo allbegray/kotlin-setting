@@ -42,6 +42,7 @@ interface KeyAndValueStorageService : StorageService {
     fun set(name: String, value: Any?)
     fun <T> get(name: String): T?
     fun <T> get(name: String, default: () -> T): T
+    fun <T> pop(name: String): T?
     fun remove(name: String)
 }
 
@@ -69,6 +70,12 @@ class SessionStorageService : KeyAndValueStorageService {
         val defaultValue = default()
         set(name, defaultValue)
         return defaultValue
+    }
+
+    override fun <T> pop(name: String): T? {
+        val value = get<T>(name)
+        remove(name)
+        return value
     }
 
     override fun remove(name: String) {

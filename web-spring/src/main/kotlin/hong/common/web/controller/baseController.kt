@@ -1,8 +1,12 @@
 package hong.common.web.controller
 
 import hong.common.exception.BaseException
+import org.springframework.beans.factory.annotation.Autowired
 
 abstract class BaseController {
+
+    @Autowired
+    lateinit var g: RequestGlobal
 
     protected fun redirect(url: String): String = "redirect:$url"
 
