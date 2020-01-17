@@ -1,5 +1,6 @@
 package hong.common.auth
 
+import hong.common.storage.SessionStorageService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.core.annotation.AnnotatedElementUtils
@@ -10,6 +11,35 @@ import java.lang.annotation.Inherited
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import kotlin.reflect.KClass
+
+interface Principal {
+    val username: String
+    val role: String
+}
+
+@Component
+class AuthService {
+
+    companion object {
+        const val PRINCIPAL_SESSION_KEY = "PRINCIPAL_SESSION_KEY"
+    }
+
+    @Autowired
+    lateinit var sessionStorageService: SessionStorageService
+
+    fun principal(): Principal? = sessionStorageService.get<Principal>(PRINCIPAL_SESSION_KEY)
+
+    fun isLogin(): Boolean = principal() != null
+
+    fun set(principal: Principal) {
+        sessionStorageService.set(PRINCIPAL_SESSION_KEY, principal)
+    }
+
+    fun invalidate() {
+        sessionStorageService.remove(PRINCIPAL_SESSION_KEY)
+        sessionStorageService.expire()
+    }
+}
 
 /**
  * or condition
@@ -52,6 +82,9 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
 
     @Autowired
     lateinit var applicationContext: ApplicationContext
+
+    @Autowired
+    lateinit var authService: AuthService
 
     override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
         if (handler is HandlerMethod) {
@@ -110,11 +143,6 @@ class AuthorizationHandlerInterceptorAdapter : HandlerInterceptorAdapter() {
         return authorizes.size == authentications.filter { it.handle(principal) }.size
     }
 
-    private fun principal(): Principal? {
-        return object : Principal {
-            override val username: String = "hong"
-            override val role: String = "user"
-        }
-    }
+    private fun principal(): Principal? = authService.principal()
 
 }

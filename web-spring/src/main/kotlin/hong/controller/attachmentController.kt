@@ -1,7 +1,7 @@
 package hong.controller
 
 import hong.common.exception.BaseException
-import hong.common.storage.FileStorageService
+import hong.common.storage.LocalFileStorageService
 import hong.meta.jooq.Tables.ATTACHMENT
 import hong.meta.jooq.enums.AttachmentStorageType
 import hong.meta.jooq.tables.pojos.Attachment
@@ -24,12 +24,12 @@ class AttachmentController {
     lateinit var attachmentService: AttachmentService
 
     @Autowired
-    lateinit var fileStorageService: FileStorageService
+    lateinit var localStorageService: LocalFileStorageService
 
     @GetMapping("/{id}")
     fun download(@PathVariable("id") id: Long): ResponseEntity<Resource> {
         val attachment = attachmentService.findOne(id) ?: throw BaseException.NotFound
-        val resource = fileStorageService.loadAsResource(attachment.resourceUri)
+        val resource = localStorageService.loadAsResource(attachment.resourceUri)
         return ResponseEntity.ok()
             .header(
                 HttpHeaders.CONTENT_DISPOSITION,
@@ -41,7 +41,7 @@ class AttachmentController {
     @PostMapping("/upload-file")
     @ResponseBody
     fun uploadFile(@RequestParam("file") file: MultipartFile): Long {
-        val filename = fileStorageService.store(file)
+        val filename = localStorageService.store(file)
         return attachmentService.save(file, filename)
     }
 }

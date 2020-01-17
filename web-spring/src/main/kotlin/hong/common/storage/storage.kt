@@ -20,13 +20,16 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.stream.Stream
 import javax.annotation.PostConstruct
+import javax.servlet.http.HttpSession
 
 @ConfigurationProperties(prefix = "storage")
 class StorageProperties {
     lateinit var location: String
 }
 
-interface StorageService {
+interface StorageService
+
+interface FileStorageService : StorageService {
     fun init()
     fun store(file: MultipartFile): String
     fun loadAll(): Stream<Path>
@@ -35,8 +38,49 @@ interface StorageService {
     fun deleteAll(): Boolean
 }
 
+interface KeyAndValueStorageService : StorageService {
+    fun set(name: String, value: Any?)
+    fun <T> get(name: String): T?
+    fun remove(name: String)
+}
+
 @Component
-class FileStorageService : StorageService {
+class SessionStorageService : KeyAndValueStorageService {
+
+    @Autowired
+    lateinit var session: HttpSession
+
+    override fun set(name: String, value: Any?) {
+        session.setAttribute(name, value)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> get(name: String): T? {
+        return session.getAttribute(name) as T?
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> get(name: String, default: () -> T): T {
+        val value = get<T>(name)
+        if (value != null) {
+            return value
+        }
+        val defaultValue = default()
+        set(name, defaultValue)
+        return defaultValue
+    }
+
+    override fun remove(name: String) {
+        session.removeAttribute(name)
+    }
+
+    fun expire() {
+        session.invalidate()
+    }
+}
+
+@Component
+class LocalFileStorageService : FileStorageService {
 
     @Autowired
     lateinit var storageProperties: StorageProperties
@@ -54,6 +98,7 @@ class FileStorageService : StorageService {
             StringUtils.stripFilenameExtension(it) to StringUtils.getFilenameExtension(it)
         }
         val newFilename = "${filename}_${LocalDateTime.now().format(dateTimeFormatter)}.$extension"
+        val resolve = rootLocation.resolve(newFilename)
         try {
             file.inputStream.use {
                 Files.copy(it, rootLocation.resolve(newFilename), StandardCopyOption.REPLACE_EXISTING)
