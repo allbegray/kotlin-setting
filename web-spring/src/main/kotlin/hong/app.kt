@@ -1,13 +1,12 @@
 package hong
 
-import hong.common.storage.StorageProperties
 import hong.integration.spring.retrofit.autoconfigure.RetrofitServiceScan
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-@EnableConfigurationProperties(value = [StorageProperties::class])
+@ConfigurationPropertiesScan
 @RetrofitServiceScan(["hong"])
 class Application
 

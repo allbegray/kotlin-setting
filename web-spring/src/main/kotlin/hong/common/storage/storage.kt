@@ -4,6 +4,7 @@ import hong.common.exception.FileNotFoundException
 import hong.common.exception.StorageException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.core.io.Resource
 import org.springframework.core.io.UrlResource
 import org.springframework.stereotype.Component
@@ -22,10 +23,9 @@ import java.util.stream.Stream
 import javax.annotation.PostConstruct
 import javax.servlet.http.HttpSession
 
+@ConstructorBinding
 @ConfigurationProperties(prefix = "storage")
-class StorageProperties {
-    lateinit var location: String
-}
+class StorageProperties(val location: String)
 
 interface StorageService
 
