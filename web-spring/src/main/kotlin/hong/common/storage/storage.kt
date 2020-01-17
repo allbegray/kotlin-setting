@@ -41,6 +41,7 @@ interface FileStorageService : StorageService {
 interface KeyAndValueStorageService : StorageService {
     fun set(name: String, value: Any?)
     fun <T> get(name: String): T?
+    fun <T> get(name: String, default: () -> T): T
     fun remove(name: String)
 }
 
@@ -60,7 +61,7 @@ class SessionStorageService : KeyAndValueStorageService {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T> get(name: String, default: () -> T): T {
+    override fun <T> get(name: String, default: () -> T): T {
         val value = get<T>(name)
         if (value != null) {
             return value
@@ -98,7 +99,6 @@ class LocalFileStorageService : FileStorageService {
             StringUtils.stripFilenameExtension(it) to StringUtils.getFilenameExtension(it)
         }
         val newFilename = "${filename}_${LocalDateTime.now().format(dateTimeFormatter)}.$extension"
-        val resolve = rootLocation.resolve(newFilename)
         try {
             file.inputStream.use {
                 Files.copy(it, rootLocation.resolve(newFilename), StandardCopyOption.REPLACE_EXISTING)
