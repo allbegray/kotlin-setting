@@ -25,7 +25,6 @@ class RequestGlobal {
     }
 
     fun popAlerts(): List<String> {
-        return sessionStorageService.pop(REQUEST_GLOBAL_ALERTS) ?: listOf()
+        return sessionStorageService.pop(REQUEST_GLOBAL_ALERTS) ?: emptyList()
     }
-
 }
